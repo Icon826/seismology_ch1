@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地震學第一章：大師的互動道場</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-animation:hover {
+            animation: shake 0.5s;
+            animation-iteration-count: infinite;
+        }
+        
+        /* 震央波動畫 */
+        .wave-circle {
+            animation: pulse 2.5s infinite ease-out;
+            transform-origin: center;
+        }
+        @keyframes pulse {
+            0% { r: 10; opacity: 1; stroke-width: 3; }
+            100% { r: 80; opacity: 0; stroke-width: 1; }
+        }
+
+        /* P波與S波動畫 */
+        .p-wave-particle {
+            animation: compress 1.5s infinite ease-in-out alternate;
+        }
+        @keyframes compress {
+            0% { transform: translateX(-5px); }
+            100% { transform: translateX(5px); }
+        }
+        
+        .s-wave-path {
+            stroke-dasharray: 400;
+            animation: dash 3s linear infinite;
+        }
+        @keyframes dash {
+            from { stroke-dashoffset: 400; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        .hidden-answer {
+            display: none;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased pb-20">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white p-8 text-center shadow-md rounded-b-3xl">
+        <h1 class="text-4xl font-bold mb-4 shake-animation inline-block cursor-pointer">🌍 地震學第一章：大師的互動道場 (進階版)</h1>
+        <p class="text-xl">歡迎來到地球科學的奇妙世界！我是你的地震學導師。<br>準備好一起感受大地的脈動與深層的能量了嗎？💥</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto mt-10 p-4 space-y-12">
+
+        <!-- 暖身與比喻 -->
+        <section class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-yellow-400">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">🥚 暖身：地球是一顆充滿壓力的「水煮蛋」？</h2>
+            <div class="space-y-4 text-lg">
+                <p>在我們談論地震之前，得先搞懂我們腳踩的這顆星球。別把地球想得太複雜，它其實就像一顆剛煮好、但殼有點裂痕的水煮蛋！</p>
+                <ul class="list-disc list-inside space-y-2 ml-4">
+                    <li><strong>蛋殼（地殼與板塊）：</strong> 最外面那層薄薄脆脆的。地球的「蛋殼」並非一整塊，而是碎裂成好幾塊「板塊」，我們就住在這些不斷擠壓、碰撞的拼圖上。</li>
+                    <li><strong>蛋白（地函）：</strong> 中間厚厚的一層，具有點流動性（熱對流）。就是它在底下慢慢翻滾，帶著上面的板塊四處漂移、打架！</li>
+                    <li><strong>蛋黃（地核）：</strong> 最中心的高溫區域，充滿了高壓的鐵和鎳。</li>
+                </ul>
+                <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 text-sm mt-4 flex items-start gap-3">
+                    <span class="text-2xl">💡</span>
+                    <p><strong>大師的科學軼聞：</strong> 你知道嗎？地函的移動速度超級慢，一年大概只移動幾公分，就跟<strong>你指甲生長的速度</strong>差不多！但正是這微小的推力，累積了百年後就成了引發大地震的恐怖能量。</p>
+                </div>
+            </div>
+
+            <!-- Quiz 1 -->
+            <div class="mt-8 bg-slate-100 p-6 rounded-xl">
+                <h3 class="font-bold mb-4 text-slate-700">🤔 大師隨堂考：</h3>
+                <p class="mb-4">如果發生地震，能量主要是從這顆「水煮蛋」的哪一個部分因為受不了擠壓而破裂釋放出來的呢？</p>
+                <div class="space-x-4">
+                    <button onclick="checkAnswer('q1', false)" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">A. 蛋黃 (地核)</button>
+                    <button onclick="checkAnswer('q1', true)" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">B. 蛋殼 (板塊/地殼)</button>
+                </div>
+                <div id="q1-feedback" class="hidden-answer mt-4 p-4 rounded-lg"></div>
+            </div>
+        </section>
+
+        <!-- 震源 vs 震央 -->
+        <section class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-red-400">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">🎯 基礎名詞大解密：震源 vs 震央</h2>
+            <div class="flex flex-col md:flex-row gap-8 items-center">
+                <div class="space-y-4 text-lg flex-1">
+                    <p>當板塊之間的摩擦力再也抓不住彼此時，岩層就會瞬間「啪！」一聲斷裂（我們稱為斷層錯動），這就是地震。記住「地下」與「地上」的差別：</p>
+                    <ul class="list-disc list-inside space-y-2 ml-4">
+                        <li><strong>💥 震源 (Hypocenter/Focus)：</strong> 在<strong>地底下</strong>真正發生岩層破裂、釋放第一道彈性波的那個「原始起點」。</li>
+                        <li><strong>📍 震央 (Epicenter)：</strong> 在<strong>地表上</strong>，正對著震源的那個位置。它是二維地圖上的座標，用來告訴大家「地震在哪裡發生」。</li>
+                        <li><strong>📏 震源深度：</strong> 震央到震源的垂直距離。深度如果在 30 公里以內稱為「極淺層地震」，就像在你腳底引爆炸彈，破壞力通常最驚人！</li>
+                    </ul>
+                </div>
+                <!-- SVG Animation -->
+                <div class="flex-1 bg-slate-900 rounded-xl p-4 flex justify-center items-center h-64 relative overflow-hidden shadow-inner">
+                    <svg viewBox="0 0 200 200" class="w-full h-full">
+                        <!-- Ground surface -->
+                        <line x1="0" y1="50" x2="200" y2="50" stroke="#4ade80" stroke-width="4" />
+                        <!-- Underground Fault line -->
+                        <line x1="150" y1="20" x2="50" y2="180" stroke="#475569" stroke-width="3" stroke-dasharray="5" />
+                        <rect x="0" y="52" width="200" height="150" fill="#78350f" opacity="0.6" />
+                        
+                        <!-- Epicenter (Surface) -->
+                        <circle cx="95" cy="50" r="5" fill="#ef4444" />
+                        <text x="110" y="45" fill="white" font-size="12" font-weight="bold">📍 震央</text>
+                        
+                        <!-- Hypocenter (Underground) -->
+                        <circle cx="95" cy="110" r="6" fill="#facc15" />
+                        <text x="110" y="115" fill="white" font-size="12" font-weight="bold">💥 震源 (斷層破裂處)</text>
+                        
+                        <!-- Depth Line -->
+                        <line x1="95" y1="55" x2="95" y2="105" stroke="white" stroke-dasharray="4" stroke-width="2" />
+                        
+                        <!-- Seismic Waves -->
+                        <circle cx="95" cy="110" fill="none" stroke="#facc15" stroke-width="2" class="wave-circle" style="animation-delay: 0s;" />
+                        <circle cx="95" cy="110" fill="none" stroke="#facc15" stroke-width="2" class="wave-circle" style="animation-delay: 0.8s;" />
+                        <circle cx="95" cy="110" fill="none" stroke="#facc15" stroke-width="2" class="wave-circle" style="animation-delay: 1.6s;" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Quiz 2 -->
+            <div class="mt-8 bg-slate-100 p-6 rounded-xl">
+                <h3 class="font-bold mb-4 text-slate-700">🤔 大師隨堂考：</h3>
+                <p class="mb-4">新聞說：「本次地震發生在花蓮外海，深度 10 公里。」請問這個「花蓮外海」指的是哪裡？</p>
+                <div class="space-x-4">
+                    <button onclick="checkAnswer('q2', true)" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">A. 震央</button>
+                    <button onclick="checkAnswer('q2', false)" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">B. 震源</button>
+                </div>
+                <div id="q2-feedback" class="hidden-answer mt-4 p-4 rounded-lg"></div>
+            </div>
+        </section>
+
+        <!-- P波與S波 -->
+        <section class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-emerald-400">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">🏃‍♂️ 地下的賽跑雙雄：P波與S波</h2>
+            <div class="space-y-6 text-lg">
+                <p>地震發生時，震源會向外發出「實體波 (Body Waves)」。最先衝出來的兩兄弟個性完全不同，這也是為什麼地震時我們常會有「先上下、後左右」的感覺！</p>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- P-wave -->
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                        <h4 class="font-bold text-emerald-800 flex items-center gap-2">
+                            <span class="text-2xl">⚡</span> P波 (Primary Wave / 初波)
+                        </h4>
+                        <p class="text-sm mt-2 text-slate-700"><strong>急性子的推擠大師：</strong> 跑得最快！它是一種「縱波」，前進方式像是在推擠（方向與傳遞方向平行）。當它抵達時，你會先聽到地鳴，並感覺到輕微的<strong>上下跳動</strong>。</p>
+                        <!-- P-wave animation -->
+                        <div class="mt-4 bg-slate-800 h-16 rounded-lg flex items-center justify-center space-x-1 px-4 overflow-hidden">
+                            <script>
+                                for(let i=0; i<20; i++) {
+                                    document.write(`<div class="w-2 h-8 bg-emerald-400 rounded-full p-wave-particle" style="animation-delay: ${i*0.1}s"></div>`);
+                                }
+                            </script>
+                        </div>
+                    </div>
+
+                    <!-- S-wave -->
+                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                        <h4 class="font-bold text-orange-800 flex items-center gap-2">
+                            <span class="text-2xl">🐍</span> S波 (Secondary Wave / 次波)
+                        </h4>
+                        <p class="text-sm mt-2 text-slate-700"><strong>慢吞吞的破壞王：</strong> 跑得比較慢（約只有P波一半速度）。它是一種「橫波」，前進方式像是在甩繩子。當它抵達時，會帶來劇烈的<strong>左右搖晃</strong>，是造成房屋倒塌的主要元凶！</p>
+                        <!-- S-wave animation -->
+                        <div class="mt-4 bg-slate-800 h-16 rounded-lg flex items-center justify-center overflow-hidden">
+                            <svg viewBox="0 0 200 50" class="w-full h-full">
+                                <path d="M 0 25 Q 12.5 5, 25 25 T 50 25 T 75 25 T 100 25 T 125 25 T 150 25 T 175 25 T 200 25" 
+                                      fill="none" stroke="#fb923c" stroke-width="4" stroke-linecap="round" class="s-wave-path" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-100 p-4 rounded-xl text-sm border-l-4 border-indigo-500">
+                    <p><strong>🧠 大師秘笈：</strong> 因為 P波跑得比 S波快，所以地震儀測到這兩個波抵達的「時間差 (S-P time)」，就可以用來推算震央距離我們有多遠喔！</p>
+                </div>
+            </div>
+
+            <!-- Quiz 3 -->
+            <div class="mt-8 bg-slate-100 p-6 rounded-xl">
+                <h3 class="font-bold mb-4 text-slate-700">🤔 大師隨堂考：</h3>
+                <p class="mb-4">你在客廳看電視，突然感覺到房子「上下」頓了一下，過了五秒鐘後才開始劇烈「左右」搖晃。請問那個最先讓你感覺到上下頓一下的傢伙是誰？</p>
+                <div class="space-x-4">
+                    <button onclick="checkAnswer('q3', true)" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">A. P波 (Primary)</button>
+                    <button onclick="checkAnswer('q3', false)" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">B. S波 (Secondary)</button>
+                </div>
+                <div id="q3-feedback" class="hidden-answer mt-4 p-4 rounded-lg"></div>
+            </div>
+        </section>
+
+        <!-- 震級 vs 震度 -->
+        <section class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-blue-400">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">📉 能量與感受：震級與震度大PK</h2>
+            <div class="space-y-4 text-lg">
+                <p>很多人會把「規模（震級）」和「震度」搞混。大師教你一個超好記的燈泡比喻，並且加碼一個恐怖的數學事實！💡</p>
+                <ul class="list-disc list-inside space-y-2 ml-4">
+                    <li><strong>🔋 震級/規模 (Magnitude)：</strong> 就像<strong>燈泡的瓦數</strong>。一次地震只有一個規模，代表它釋放的總能量。</li>
+                    <li><strong>💥 恐怖的能量倍數：</strong> 規模可不是簡單的加法！規模每增加 1.0，釋放的能量就會暴增約 <strong>32倍</strong>！(所以規模 7.0 的地震，能量是規模 5.0 的 1000 倍啊！)</li>
+                    <li><strong>😵 震度 (Intensity)：</strong> 就像<strong>你感受到的亮度</strong>。離震央越近、或是位在鬆軟泥土（盆地效應）上的地方，你覺得越亮（搖得越慘）。所以同一個地震，各地的震度都不同！</li>
+                </ul>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-sm mt-4 flex items-start gap-3">
+                    <span class="text-2xl">🧊</span>
+                    <p><strong>大師的冷笑話時間：</strong> 地震為什麼最後跟板塊分手了？<br>……因為他們之間「摩擦」太多，最後還是走向了「斷層」！😎 (好啦，我知道很冷，我們繼續！)</p>
+                </div>
+            </div>
+
+            <!-- Quiz 4 -->
+            <div class="mt-8 bg-slate-100 p-6 rounded-xl">
+                <h3 class="font-bold mb-4 text-slate-700">🤔 大師隨堂考：</h3>
+                <p class="mb-4">大明在台北，小華在高雄。台灣中部發生了地震，請問大明和小華看新聞時，哪一個數值兩個人看到的「一定是一樣的」？</p>
+                <div class="space-x-4">
+                    <button onclick="checkAnswer('q4', false)" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">A. 震度 (搖晃程度)</button>
+                    <button onclick="checkAnswer('q4', true)" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">B. 震級/規模 (總能量)</button>
+                </div>
+                <div id="q4-feedback" class="hidden-answer mt-4 p-4 rounded-lg"></div>
+            </div>
+        </section>
+
+        <!-- Footer Question -->
+        <div class="text-center py-8">
+            <h2 class="text-2xl font-bold text-slate-700 shake-animation inline-block cursor-pointer">關於這一部分的震動，你有什麼想進一步探討的嗎？</h2>
+            <p class="text-slate-500 mt-2">不懂的話別害羞，隨時問我！不管是想聽更多故事，還是想鑽研波的方程式，大師都在這裡！</p>
+        </div>
+
+    </main>
+
+    <script>
+        function checkAnswer(questionId, isCorrect) {
+            const feedbackBox = document.getElementById(questionId + '-feedback');
+            feedbackBox.style.display = 'block';
+            
+            if (isCorrect) {
+                feedbackBox.className = 'mt-4 p-4 rounded-lg bg-green-100 border border-green-300 text-green-800';
+                if (questionId === 'q1') {
+                    feedbackBox.innerHTML = '<strong>✅ 答對啦！</strong> 地震主要是發生在堅硬且脆弱的「蛋殼（地殼與板塊）」相互摩擦、破裂時產生的喔！太棒了！';
+                } else if (questionId === 'q2') {
+                    feedbackBox.innerHTML = '<strong>✅ 沒錯！</strong> 「花蓮外海」指的是地表(海面)上的位置座標，所以是📍震央。你已經掌握訣竅了！';
+                } else if (questionId === 'q3') {
+                    feedbackBox.innerHTML = '<strong>✅ 內行！</strong> 跑得最快的 P波 (Primary wave) 是一種縱波，會先帶來上下跳動的感覺。小心防範隨後到來的 S波喔！';
+                } else if (questionId === 'q4') {
+                    feedbackBox.innerHTML = '<strong>✅ 太神啦！</strong> 一次地震只有一個總能量（燈泡瓦數/規模），但兩地距離不同，感受到的搖晃（震度）就會不一樣！';
+                }
+            } else {
+                feedbackBox.className = 'mt-4 p-4 rounded-lg bg-red-100 border border-red-300 text-red-800';
+                if (questionId === 'q1') {
+                    feedbackBox.innerHTML = '<strong>❌ 哎呀，再想想！</strong> 蛋黃（地核）太深且處於極高溫高壓狀態，地震其實主要發生在最外面互相碰撞的板塊。再試一次？';
+                } else if (questionId === 'q2') {
+                    feedbackBox.innerHTML = '<strong>❌ 喔噢，差一點！</strong> 記得我們說的：「地下」是震源，「地上（或海面）」用來標示位置的是震央。再試一次看看！';
+                } else if (questionId === 'q3') {
+                    feedbackBox.innerHTML = '<strong>❌ 搞反囉！</strong> S波 (Secondary) 跑得比較慢，它是帶來左右劇烈搖晃的元凶。最先讓你感覺到上下頓一下的，是跑最快的 P波！再試一次。';
+                } else if (questionId === 'q4') {
+                    feedbackBox.innerHTML = '<strong>❌ 掉進陷阱囉！</strong> 台北和高雄距離震央遠近不同，所以「震度（搖晃感）」絕對不一樣。但這顆地震「燈泡」的總瓦數是不變的喔！再點一次吧！';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
