@@ -1,99 +1,127 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地震學 第一章 互動學堂</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
     
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
-        @keyframes wiggle {
-            0%, 100% { transform: rotate(-3deg) translateX(-2px); }
-            50% { transform: rotate(3deg) translateX(2px); }
+        /* 基礎平滑動畫補強 */
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes sink {
-            0%, 100% { transform: translate(-50%, 0) rotate(0); }
-            50% { transform: translate(-50%, 40px) rotate(5deg); }
-        }
-        .animate-wiggle { animation: wiggle 1s ease-in-out infinite; }
-        .animate-sink { animation: sink 4s infinite; }
     </style>
 </head>
-<body class="bg-slate-50">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useRef } = React;
 
-        // 模擬 Lucide React 組件
+        // --- 處理 Lucide 圖標的共用元件 ---
         const Icon = ({ name, size = 24, className = "" }) => {
-            const iconRef = React.useRef(null);
+            const spanRef = useRef(null);
             useEffect(() => {
-                if (iconRef.current) {
-                    // 清除舊內容並重新渲染圖示
-                    iconRef.current.innerHTML = '';
-                    const iconElement = lucide.createIcons({
-                        icons: { [name]: lucide[name] },
-                        attrs: { 
-                            strokeWidth: 2,
-                            width: size,
-                            height: size,
-                            class: className
-                        }
-                    });
+                if (spanRef.current) {
+                    // 安全地替換內部 HTML 以避免 React DOM 衝突
+                    spanRef.current.innerHTML = `<i data-lucide="${name}" class="${className}" style="width:${size}px; height:${size}px; display:block;"></i>`;
+                    if (window.lucide) {
+                        window.lucide.createIcons({ root: spanRef.current });
+                    }
                 }
             }, [name, size, className]);
-            return <span ref={iconRef} className="inline-block" />;
+            return <span ref={spanRef} className="inline-flex items-center justify-center shrink-0"></span>;
         };
 
+        // 映射原始程式碼中使用的圖標
+        const Activity = (p) => <Icon name="activity" {...p} />;
+        const MapIcon = (p) => <Icon name="map" {...p} />; // 改名避免與 JS 的 Map 衝突
+        const AlertTriangle = (p) => <Icon name="alert-triangle" {...p} />;
+        const Home = (p) => <Icon name="home" {...p} />;
+        const Search = (p) => <Icon name="search" {...p} />;
+        const ShieldAlert = (p) => <Icon name="shield-alert" {...p} />;
+        const Globe = (p) => <Icon name="globe" {...p} />;
+        const Waves = (p) => <Icon name="waves" {...p} />;
+        const Zap = (p) => <Icon name="zap" {...p} />;
+        const CheckCircle2 = (p) => <Icon name="check-circle-2" {...p} />;
+        const XCircle = (p) => <Icon name="x-circle" {...p} />;
+        const HelpCircle = (p) => <Icon name="help-circle" {...p} />;
+        const ChevronDown = (p) => <Icon name="chevron-down" {...p} />;
+        const ChevronUp = (p) => <Icon name="chevron-up" {...p} />;
+        const Info = (p) => <Icon name="info" {...p} />;
+        const Wind = (p) => <Icon name="wind" {...p} />;
+
         // --- 動態小組件：震波模擬 ---
-        const WaveAnimation = () => (
-            <div className="w-full h-32 bg-slate-900 rounded-lg overflow-hidden relative flex items-center justify-center mb-4">
-                <div className="absolute left-4 text-white text-xs font-mono">Source 💥</div>
-                <div className="flex gap-1">
-                    {[...Array(20)].map((_, i) => (
-                        <div 
-                            key={i} 
-                            className="w-2 h-12 bg-blue-400 rounded-full animate-bounce"
-                            style={{ animationDelay: `${i * 0.1}s`, animationDuration: '1s' }}
-                        />
-                    ))}
+        const WaveAnimation = () => {
+            return (
+                <div className="w-full h-32 bg-slate-900 rounded-lg overflow-hidden relative flex items-center justify-center mb-4">
+                    <div className="absolute left-4 text-white text-xs font-mono">Source 💥</div>
+                    <div className="flex gap-1">
+                        {[...Array(20)].map((_, i) => (
+                            <div 
+                                key={i} 
+                                className="w-2 h-12 bg-blue-400 rounded-full animate-bounce"
+                                style={{ animationDelay: `${i * 0.1}s`, animationDuration: '1s' }}
+                            />
+                        ))}
+                    </div>
+                    <div className="absolute right-4 text-white text-xs font-mono">Receiver 📡</div>
                 </div>
-                <div className="absolute right-4 text-white text-xs font-mono">Receiver 📡</div>
-            </div>
-        );
+            );
+        };
 
         // --- 動態小組件：建築共振 ---
-        const BuildingResonance = () => (
-            <div className="w-full h-40 bg-gray-200 rounded-lg relative flex items-end justify-around p-4 border-b-4 border-gray-400">
-                <div className="flex flex-col items-center">
-                    <div className="w-8 h-12 bg-orange-400 border-2 border-orange-600 animate-wiggle" style={{animationDuration: '0.5s'}} />
-                    <span className="text-[10px] mt-1">矮房(高頻)</span>
+        const BuildingResonance = () => {
+            return (
+                <div className="w-full h-40 bg-gray-200 rounded-lg relative flex items-end justify-around p-4 border-b-4 border-gray-400">
+                    {/* 矮房 */}
+                    <div className="flex flex-col items-center">
+                        <div className="w-8 h-12 bg-orange-400 border-2 border-orange-600 animate-[wiggle_0.5s_ease-in-out_infinite]" />
+                        <span className="text-[10px] mt-1 font-bold">矮房(高頻)</span>
+                    </div>
+                    {/* 中樓 */}
+                    <div className="flex flex-col items-center">
+                        <div className="w-10 h-20 bg-blue-400 border-2 border-blue-600 animate-[wiggle_1s_ease-in-out_infinite]" />
+                        <span className="text-[10px] mt-1 font-bold">中樓</span>
+                    </div>
+                    {/* 高樓 */}
+                    <div className="flex flex-col items-center">
+                        <div className="w-12 h-32 bg-emerald-400 border-2 border-emerald-600 animate-[wiggle_2s_ease-in-out_infinite]" />
+                        <span className="text-[10px] mt-1 font-bold">高樓(低頻)</span>
+                    </div>
+                    <style>{`
+                        @keyframes wiggle {
+                            0%, 100% { transform: rotate(-3deg) translateX(-2px); }
+                            50% { transform: rotate(3deg) translateX(2px); }
+                        }
+                    `}</style>
                 </div>
-                <div className="flex flex-col items-center">
-                    <div className="w-10 h-20 bg-blue-400 border-2 border-blue-600 animate-wiggle" style={{animationDuration: '1s'}} />
-                    <span className="text-[10px] mt-1">中樓</span>
-                </div>
-                <div className="flex flex-col items-center">
-                    <div className="w-12 h-32 bg-emerald-400 border-2 border-emerald-600 animate-wiggle" style={{animationDuration: '2s'}} />
-                    <span className="text-[10px] mt-1">高樓(低頻)</span>
-                </div>
-            </div>
-        );
+            );
+        };
 
-        const Card = ({ title, children, iconName, color = "blue", initialOpen = true }) => {
+        const Card = ({ title, children, icon: IconComponent, color = "blue", initialOpen = true }) => {
             const [isOpen, setIsOpen] = useState(initialOpen);
+            
+            // 完整類別名稱以確保 Tailwind CDN 能正確解析
             const colorClasses = {
                 blue: "border-blue-500 bg-blue-50",
                 red: "border-red-500 bg-red-50",
                 green: "border-green-500 bg-green-50",
                 amber: "border-amber-500 bg-amber-50"
             };
-            const iconColor = {
+            const iconColorClasses = {
                 blue: "text-blue-600",
                 red: "text-red-600",
                 green: "text-green-600",
@@ -102,14 +130,17 @@
 
             return (
                 <div className={`mb-8 border-l-4 rounded-r-xl shadow-lg overflow-hidden transition-all duration-300 ${colorClasses[color]}`}>
-                    <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50">
-                        <div className="flex items-center gap-3">
-                            <Icon name={iconName} className={iconColor[color]} size={24} />
+                    <button 
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition-colors"
+                    >
+                        <div className="flex items-center gap-3 text-left">
+                            {IconComponent && <IconComponent className={iconColorClasses[color]} size={24} />}
                             <h2 className="text-xl font-bold text-gray-800">{title}</h2>
                         </div>
-                        <Icon name={isOpen ? "ChevronUp" : "ChevronDown"} size={20} />
+                        {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </button>
-                    {isOpen && <div className="p-6 text-gray-700">{children}</div>}
+                    {isOpen && <div className="p-6 text-gray-700 fade-in">{children}</div>}
                 </div>
             );
         };
@@ -119,15 +150,17 @@
             return (
                 <div className="mt-6 p-5 bg-white rounded-xl border-2 border-dashed border-purple-200 shadow-inner">
                     <p className="font-bold mb-4 flex items-center gap-2 text-purple-800">
-                        <Icon name="HelpCircle" size={20} /> {question}
+                        <HelpCircle size={20} /> {question}
                     </p>
                     <div className="grid gap-2">
                         {options.map((opt, idx) => (
-                            <button key={idx} onClick={() => setSelected(idx)}
-                                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                            <button
+                                key={idx}
+                                onClick={() => setSelected(idx)}
+                                className={`w-full text-left p-4 rounded-lg border-2 transition-all font-medium ${
                                     selected === idx 
-                                        ? (idx === answer ? "bg-green-100 border-green-500 ring-2 ring-green-200" : "bg-red-100 border-red-500 ring-2 ring-red-200")
-                                        : "hover:bg-gray-50 border-gray-200"
+                                    ? (idx === answer ? "bg-green-100 border-green-500 ring-2 ring-green-200" : "bg-red-100 border-red-500 ring-2 ring-red-200")
+                                    : "hover:bg-gray-50 border-gray-200"
                                 }`}
                             >
                                 {opt}
@@ -136,7 +169,7 @@
                     </div>
                     {selected !== null && (
                         <div className={`mt-4 p-4 rounded-lg flex gap-3 ${selected === answer ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
-                            <Icon name={selected === answer ? "CheckCircle2" : "XCircle"} className="shrink-0" />
+                            {selected === answer ? <CheckCircle2 className="shrink-0 text-green-600" /> : <XCircle className="shrink-0 text-red-600" />}
                             <p className="text-sm"><strong>{selected === answer ? "太棒了！" : "喔不！"}</strong> {explanation}</p>
                         </div>
                     )}
@@ -146,8 +179,11 @@
 
         const App = () => {
             return (
-                <div className="min-h-screen p-4 md:p-8 font-sans">
+                <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
                     <header className="max-w-4xl mx-auto text-center mb-12 relative">
+                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-10 pointer-events-none">
+                            <Globe size={120} />
+                        </div>
                         <h1 className="text-4xl md:text-6xl font-black text-slate-800 mb-4 tracking-tight">
                             地震學 <span className="text-red-600">第一章</span> 互動學堂
                         </h1>
@@ -158,96 +194,294 @@
                     </header>
 
                     <main className="max-w-4xl mx-auto">
-                        <Card title="1. 地震學研究範疇" iconName="Globe" color="blue">
+                        
+                        {/* 1. 研究範疇 */}
+                        <Card title="1. 地震學研究範疇" icon={Globe} color="blue">
                             <WaveAnimation />
-                            <p className="mb-4 text-lg">地震學是研究彈性波在地球內部的「旅遊筆記」。</p>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-white p-4 rounded-lg border text-center">
-                                    <Icon name="Zap" className="text-yellow-500 mx-auto" />
-                                    <h4 className="font-bold">震源</h4>
+                            <p className="mb-4 text-lg">
+                                地震學是研究彈性波在地球內部的「旅遊筆記」。大師告訴你，這門學問主要看三點：
+                            </p>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <div className="bg-white p-4 rounded-lg border text-center shadow-sm">
+                                    <Zap className="mx-auto text-yellow-500 mb-2" size={32} />
+                                    <h4 className="font-bold">震源 (Source)</h4>
+                                    <p className="text-xs text-slate-500 mt-1">是誰在製造噪音？</p>
                                 </div>
-                                <div className="bg-white p-4 rounded-lg border text-center">
-                                    <Icon name="Activity" className="text-blue-500 mx-auto" />
-                                    <h4 className="font-bold">路徑</h4>
+                                <div className="bg-white p-4 rounded-lg border text-center shadow-sm">
+                                    <Activity className="mx-auto text-blue-500 mb-2" size={32} />
+                                    <h4 className="font-bold">路徑 (Medium)</h4>
+                                    <p className="text-xs text-slate-500 mt-1">波傳過的石頭好走嗎？</p>
                                 </div>
-                                <div className="bg-white p-4 rounded-lg border text-center">
-                                    <Icon name="Wind" className="text-green-500 mx-auto" />
-                                    <h4 className="font-bold">接收器</h4>
+                                <div className="bg-white p-4 rounded-lg border text-center shadow-sm">
+                                    <Wind className="mx-auto text-green-500 mb-2" size={32} />
+                                    <h4 className="font-bold">接收器 (Receiver)</h4>
+                                    <p className="text-xs text-slate-500 mt-1">我們收到了什麼悄悄話？</p>
                                 </div>
                             </div>
                         </Card>
 
-                        <Card title="3. Hazard vs Risk：天災與人禍" iconName="AlertTriangle" color="red">
+                        {/* 2. 圖表說明 */}
+                        <Card title="2. 核心觀測模型 (圖1.1-1~1.1-5)" icon={MapIcon} color="blue">
+                            <div className="space-y-6">
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                    <h3 className="font-bold text-blue-700 mb-3 flex items-center gap-2">
+                                        <Info size={18} /> 圖1.1-1：波傳遞全景圖
+                                    </h3>
+                                    <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.1-1.png" alt="1.1-1" className="w-full rounded-lg hover:scale-[1.02] transition-transform cursor-zoom-in" />
+                                    <p className="mt-3 text-sm bg-blue-50 p-3 rounded">這張圖是地震學的基礎。我們透過表面的震譜，推算地下的震源與介質。這就像透過門縫聽房間裡的對話，來猜誰在吵架。</p>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                        <h4 className="font-bold text-sm mb-2 text-slate-600">圖1.1-2：走時曲線</h4>
+                                        <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.1-2.png" alt="1.1-2" className="w-full rounded mb-2 border" />
+                                        <p className="text-xs">斜率越緩代表波速越快。P波永遠領先 S波，這就是我們能做「預警」的物理本錢！</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                        <h4 className="font-bold text-sm mb-2 text-slate-600">圖1.1-3：振幅衰減</h4>
+                                        <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.1-3.png" alt="1.1-3" className="w-full rounded mb-2 border" />
+                                        <p className="text-xs">能量隨距離散開。就像在山谷喊話，離得越遠，聲音越小（幾何擴散）。</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-800 p-6 rounded-xl text-white shadow-md">
+                                    <h4 className="font-bold mb-4 flex items-center gap-2">
+                                        <Zap className="text-yellow-400" /> 圖1.1-4 & 1.1-5：時域與頻域的魔法
+                                    </h4>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1 bg-white/10 p-2 rounded">
+                                            <p className="text-[10px] text-center mb-1">波形圖 (Time)</p>
+                                            <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.1-4.png" alt="1.1-4" className="w-full rounded brightness-125 bg-white/5" />
+                                        </div>
+                                        <div className="flex-1 bg-white/10 p-2 rounded">
+                                            <p className="text-[10px] text-center mb-1">頻譜圖 (Frequency)</p>
+                                            <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.1-5.png" alt="1.1-5" className="w-full rounded brightness-125 bg-white/5" />
+                                        </div>
+                                    </div>
+                                    <p className="text-xs mt-4 text-slate-300">
+                                        傅立葉轉換能把亂七八糟的震波拆成一堆規律的圓舞曲。1.1-5 告訴我們哪些頻率最有力，這對蓋房子至關重要！
+                                    </p>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* 3. Hazard vs Risk */}
+                        <Card title="3. Hazard vs Risk：天災與人禍" icon={AlertTriangle} color="red">
                             <div className="grid md:grid-cols-2 gap-4 mb-6">
                                 <div className="p-4 bg-white rounded-xl shadow-sm border-t-4 border-red-500">
                                     <h4 className="font-bold text-red-600 text-lg mb-2 italic">Seismic Hazard</h4>
-                                    <p className="text-sm"><strong>大自然的肌力：</strong> 某個地方搖晃的可能性。</p>
+                                    <p className="text-sm"><strong>大自然的肌力：</strong> 某個地方搖晃的可能性。你拿它沒轍，它是上帝擲骰子的結果。</p>
                                 </div>
                                 <div className="p-4 bg-white rounded-xl shadow-sm border-t-4 border-orange-500">
                                     <h4 className="font-bold text-orange-600 text-lg mb-2 italic">Seismic Risk</h4>
-                                    <p className="text-sm"><strong>風險：</strong> Hazard × 曝險 × 脆弱度。</p>
+                                    <p className="text-sm"><strong>口袋的錢與人命：</strong> 如果大地震搖在沒人的南極，Risk = 0。<strong>Risk = Hazard × 曝險 × 脆弱度。</strong></p>
                                 </div>
                             </div>
                             <Quiz 
-                                question="如果在斷層帶上蓋一棟紙糊的醫院，這會影響 Hazard 還是 Risk？"
-                                options={["會讓 Hazard 變大", "會讓 Risk 變大", "只會被大師罵"]}
+                                question="大師想問你：如果在斷層帶上蓋一棟紙糊的醫院，這會影響 Hazard 還是 Risk？"
+                                options={["會讓 Hazard 變大，因為地震變多了", "會讓 Risk 變大，因為損失會非常慘重", "兩者都不會，只會被大師罵"]}
                                 answer={1}
-                                explanation="沒錯！你不能控制地震晃多大 (Hazard)，但你可以決定建築強韌度 (Risk)。"
+                                explanation="沒錯！你不能控制地震晃多大 (Hazard)，但你可以決定醫院蓋在哪裡跟多強 (Risk)。"
                             />
                         </Card>
 
-                        <Card title="6. 房子、建材與致命共振" iconName="Home" color="blue">
+                        {/* 4. 能量衰減 */}
+                        <Card title="4. 能量衰減：震波的「過路費」" icon={Zap} color="amber">
+                            <div className="bg-white p-6 rounded-xl border-2 border-amber-200 mb-6 flex flex-col items-center shadow-sm">
+                                <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/%E5%85%AC%E5%BC%8F1.png" alt="公式1" className="max-h-20 mb-4 bg-amber-50 p-2 rounded border border-amber-100" />
+                                <p className="text-sm text-slate-600 text-center">
+                                    震波每跑一公里，都要繳「能量稅」。主要原因有：
+                                </p>
+                            </div>
+                            <ul className="space-y-4">
+                                <li className="flex gap-4 items-start">
+                                    <div className="bg-amber-500 text-white p-2 rounded-full font-bold shadow-sm flex items-center justify-center w-8 h-8 shrink-0">1</div>
+                                    <div>
+                                        <h5 className="font-bold">幾何擴散 (Geometric Spreading)</h5>
+                                        <p className="text-sm mt-1">波像氣球越吹越大，表面積增加，單位面積分配到的能量就越少。這是「物理規律」。</p>
+                                    </div>
+                                </li>
+                                <li className="flex gap-4 items-start">
+                                    <div className="bg-amber-500 text-white p-2 rounded-full font-bold shadow-sm flex items-center justify-center w-8 h-8 shrink-0">2</div>
+                                    <div>
+                                        <h5 className="font-bold">內在衰減 (Intrinsic Attenuation)</h5>
+                                        <p className="text-sm mt-1">岩石不是完美彈性！分子互相摩擦變成「熱」。公式中的 Q (Quality Factor) 就是衡量岩石好壞的指標，Q 越高代表越「硬派」，能量消耗越少。</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </Card>
+
+                        {/* 5. 社會影響 */}
+                        <Card title="5. 地震與社會 (圖1.2-3, 5, 6)" icon={Activity} color="green">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-white p-4 rounded-lg border shadow-sm">
+                                    <h4 className="text-sm font-bold mb-2 text-slate-700">圖1.2-3：災損分布</h4>
+                                    <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.2-3.png" alt="1.2-3" className="w-full h-40 object-contain rounded" />
+                                </div>
+                                <div className="bg-white p-4 rounded-lg border shadow-sm">
+                                    <h4 className="text-sm font-bold mb-2 text-slate-700">圖1.2-5：死亡統計</h4>
+                                    <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.2-5.png" alt="1.2-5" className="w-full h-40 object-contain rounded" />
+                                </div>
+                                <div className="md:col-span-2 bg-white p-4 rounded-lg border shadow-sm flex flex-col items-center">
+                                    <h4 className="text-sm font-bold mb-2 text-slate-700">圖1.2-6：富裕 vs 貧窮的震後命運</h4>
+                                    <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.2-6.png" alt="1.2-6" className="max-w-md w-full rounded border" />
+                                    <p className="mt-4 text-sm text-green-800 bg-green-50 p-3 rounded italic font-medium">
+                                        大師總結：有錢國家賠錢多（東西貴），窮國家賠命多（房子差）。這就是現實的殘酷啊。
+                                    </p>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* 6. 建材與高度 */}
+                        <Card title="6. 房子、建材與致命共振" icon={Home} color="blue">
                             <BuildingResonance />
                             <div className="mt-6 grid md:grid-cols-2 gap-6">
                                 <div className="bg-blue-100 p-4 rounded-xl border-l-4 border-blue-500">
-                                    <h4 className="font-bold mb-2">建材排排站</h4>
-                                    <ul className="text-sm space-y-2">
-                                        <li>❌ 土石牆 | ⚠️ 磚牆 | ✅ RC (鋼筋混泥土) | 🌟 SS (鋼骨)</li>
+                                    <h4 className="font-bold mb-3 text-blue-900">建材排排站</h4>
+                                    <ul className="text-sm space-y-2 text-blue-800">
+                                        <li>❌ <strong>土石牆：</strong> 地震學家的惡夢，一晃就垮，砸死人。</li>
+                                        <li>⚠️ <strong>磚牆：</strong> 有點硬度但沒韌性，牆裂掉就像餅乾碎。</li>
+                                        <li>✅ <strong>RC (鋼筋混泥土)：</strong> 目前主力，既能承重又有一定彈性。</li>
+                                        <li>🌟 <strong>SS (鋼骨)：</strong> 像跳舞一樣，晃得兇但不容易斷。</li>
                                     </ul>
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                    <h4 className="font-bold mb-2">為什麼矮房也會倒？</h4>
-                                    <p className="text-sm">當地震波頻率對上房子的自然頻率，就會發生<strong>共振</strong>。</p>
+                                    <h4 className="font-bold mb-2 text-slate-800">為什麼矮房也会倒？</h4>
+                                    <p className="text-sm text-slate-600 leading-relaxed">
+                                        當地震波的頻率剛好對上房子的「自然頻率」，就會發生<strong>共振</strong>。
+                                        高樓怕「慢晃（低頻）」，矮房怕「快晃（高頻）」。所以不是越高越慘，是看誰跟地震對上眼！
+                                    </p>
                                 </div>
                             </div>
                         </Card>
 
-                        <Card title="7. 土壤液化：陸地上的流沙" iconName="Waves" color="amber">
+                        {/* 7. 土壤液化 */}
+                        <Card title="7. 土壤液化：陸地上的流沙" icon={Waves} color="amber">
                             <div className="flex flex-col md:flex-row gap-6 items-center">
                                 <div className="flex-1 space-y-4">
-                                    <div className="bg-amber-100 p-4 rounded-lg border-2 border-amber-400">
-                                        <h4 className="font-bold text-amber-800">液化三部曲：</h4>
-                                        <p className="text-sm">鬆散砂土 + 水填滿縫隙 + 地震猛搖</p>
+                                    <div className="bg-amber-100 p-4 rounded-lg border-2 border-amber-400 animate-pulse">
+                                        <h4 className="font-bold text-amber-800 mb-1">液化三部曲：</h4>
+                                        <p className="text-sm font-medium">1. 鬆散砂土 + 2. 水填滿縫隙 + 3. 地震猛搖</p>
                                     </div>
+                                    <p className="text-sm leading-relaxed text-slate-700">
+                                        就像把一碗混了水的砂糖拿去震動，水會把砂糖擠開，整碗沙土瞬間變成流體。原本穩穩的建築，這下就直接像船一樣沉下去了。
+                                    </p>
                                 </div>
                                 <div className="w-full md:w-64 h-48 bg-sky-200 rounded-2xl relative overflow-hidden flex flex-col justify-end p-2 border-4 border-amber-900 shadow-inner">
-                                    <div className="absolute top-10 left-1/2 -translate-x-1/2 w-20 h-24 bg-red-500 rounded border-2 border-red-700 animate-sink shadow-xl">
-                                        <div className="flex flex-wrap p-1"><div className="w-3 h-3 bg-white/50 m-1" /><div className="w-3 h-3 bg-white/50 m-1" /></div>
+                                    <div className="absolute top-10 left-1/2 -translate-x-1/2 w-20 h-24 bg-red-500 rounded border-2 border-red-700 animate-[sink_4s_infinite] shadow-xl">
+                                        <div className="flex flex-wrap p-1">
+                                            <div className="w-3 h-3 bg-white/50 m-1 rounded-sm" />
+                                            <div className="w-3 h-3 bg-white/50 m-1 rounded-sm" />
+                                        </div>
                                     </div>
-                                    <div className="h-20 w-full bg-amber-400 opacity-80 flex items-center justify-center font-bold text-amber-900">液化層</div>
+                                    <div className="h-20 w-full bg-amber-400 opacity-80 animate-pulse flex items-center justify-center font-bold text-amber-900">
+                                        液化層 (沙+水)
+                                    </div>
+                                </div>
+                            </div>
+                            <style>{`
+                                @keyframes sink {
+                                    0%, 100% { transform: translate(-50%, 0) rotate(0); }
+                                    50% { transform: translate(-50%, 40px) rotate(5deg); }
+                                }
+                            `}</style>
+                        </Card>
+
+                        {/* 8. 預報 vs 預測 */}
+                        <Card title="8. 預測 vs 預報 (圖1.2-14)" icon={ShieldAlert} color="red">
+                            <div className="bg-white p-6 rounded-2xl shadow-inner border border-gray-100 mb-6">
+                                <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.2-14.png" alt="1.2-14" className="mx-auto rounded-xl hover:shadow-2xl transition-shadow border" />
+                                <p className="text-xs text-center mt-3 font-mono text-red-500 font-bold">SYSTEM: EARTHQUAKE EARLY WARNING ACTIVE</p>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="p-4 bg-red-50 rounded-xl border border-red-200">
+                                    <h4 className="font-bold text-red-700 underline mb-2">地震預測 (Prediction)</h4>
+                                    <p className="text-sm text-red-900">人類的夢想，但目前<strong>不可靠</strong>。試圖提前幾天或幾個月告訴你地點跟規模。</p>
+                                </div>
+                                <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                                    <h4 className="font-bold text-green-700 underline mb-2">地震預警 (Warning)</h4>
+                                    <p className="text-sm text-green-900">利用 P波比 S波快的物理現象。地震已發生，要在破壞性的強波抵達前 10 幾秒給你逃命。<strong>這救命最有感！</strong></p>
                                 </div>
                             </div>
                         </Card>
 
-                        <Card title="11. 核武監測" iconName="ShieldAlert" color="red">
-                            <div className="bg-slate-900 p-6 rounded-2xl border-4 border-red-900 text-white mb-6">
-                                <h4 className="font-bold mb-4 flex items-center gap-2"><Icon name="Zap" className="text-red-500" /> 爆炸 vs 地震</h4>
-                                <div className="grid grid-cols-2 gap-4 text-xs">
-                                    <div className="border-l-2 border-red-500 pl-2"><strong>爆炸：</strong>P波超強。</div>
-                                    <div className="border-l-2 border-blue-500 pl-2"><strong>地震：</strong>S波超大。</div>
+                        {/* 9. Seismic Gap */}
+                        <Card title="9. Seismic Gap：補考預定地 (圖1.2-15/16)" icon={MapIcon} color="blue">
+                            <p className="text-sm mb-4 bg-blue-100 p-3 rounded-lg text-blue-800">這就像是一群人在跳大繩，如果整條繩子都動了，只有中間一截沒動，那那一截遲早會突然爆發，這就是「空區」。</p>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-white p-3 rounded shadow-sm border border-gray-100">
+                                    <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.2-15.png" alt="1.2-15" className="w-full rounded" />
+                                    <p className="text-[10px] text-center mt-2 uppercase tracking-wider text-blue-500 font-bold">Concept Diagram</p>
+                                </div>
+                                <div className="bg-white p-3 rounded shadow-sm border border-gray-100">
+                                    <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.2-16.png" alt="1.2-16" className="w-full rounded" />
+                                    <p className="text-[10px] text-center mt-2 uppercase tracking-wider text-blue-500 font-bold">Observational Data</p>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* 10. 預測方法 */}
+                        <Card title="10. 尋找地震的「前兆」" icon={Search} color="blue">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {[
+                                    { icon: "🐶", t: "動物行為", d: "傳聞多，科學驗證難" },
+                                    { icon: "🌡️", t: "氡氣/化學", d: "地殼壓力釋放氣體" },
+                                    { icon: "📉", t: "地殼變形", d: "GPS 觀測微小位移" },
+                                    { icon: "🧲", t: "電磁異常", d: "電離層的異常波動" }
+                                ].map((m, i) => (
+                                    <div key={i} className="bg-white p-4 rounded-xl shadow-sm border text-center hover:bg-blue-50 transition-colors cursor-default">
+                                        <div className="text-3xl mb-2">{m.icon}</div>
+                                        <div className="font-bold text-sm mb-1 text-slate-800">{m.t}</div>
+                                        <div className="text-[11px] text-slate-500">{m.d}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+
+                        {/* 11. 核武監測 */}
+                        <Card title="11. 地震儀抓核試爆 (圖1.2-18/19)" icon={ShieldAlert} color="red">
+                            <div className="flex flex-col gap-6">
+                                <div className="bg-slate-900 p-6 rounded-2xl relative overflow-hidden border-4 border-red-900 shadow-lg">
+                                    <h4 className="text-white font-bold mb-4 flex items-center gap-2">
+                                        <Zap className="text-red-500" /> 爆炸 vs 地震 震波大 PK
+                                    </h4>
+                                    <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.2-18.png" alt="1.2-18" className="w-full rounded brightness-125 contrast-125 mb-5 bg-slate-800 p-2" />
+                                    <div className="grid grid-cols-2 gap-4 text-sm text-slate-300">
+                                        <div className="border-l-2 border-red-500 pl-3">
+                                            <strong className="text-red-400">爆炸 (Explosion)：</strong><br/>
+                                            點源擴張，P波超強。
+                                        </div>
+                                        <div className="border-l-2 border-blue-500 pl-3">
+                                            <strong className="text-blue-400">地震 (Earthquake)：</strong><br/>
+                                            剪力破裂，S波超大。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white p-5 rounded-xl border-2 border-slate-100 shadow-sm">
+                                    <h4 className="font-bold text-sm mb-3 italic text-slate-700">圖 1.2-19 mb vs Ms 判別法</h4>
+                                    <img src="https://raw.githubusercontent.com/Icon826/seismology_ch1/main/1.2-19.png" alt="1.2-19" className="w-full max-w-lg mx-auto rounded border" />
+                                    <p className="text-sm mt-4 bg-slate-50 p-4 rounded leading-relaxed border border-slate-100">
+                                        <strong>mb 是體波規模，Ms 是表面波規模。</strong> 核爆因為發生在地下深處的一個點，體波極強但表面波很弱。如果 mb 比 Ms 大很多，那八成就是有人在偷偷玩大炸彈！
+                                    </p>
                                 </div>
                             </div>
                             <Quiz 
-                                question="為什麼可以用地震學抓核爆？"
-                                options={["聞到炸彈味", "波形特徵不同", "地球會停轉"]}
+                                question="為什麼我們可以用地震學來抓地下核爆？"
+                                options={["因為炸彈的味道會傳到地震儀", "因為爆炸產生的震波特徵與自然地震截然不同", "因為爆炸會讓地球停轉"]}
                                 answer={1}
-                                explanation="答對了！爆炸是全向擴張力，地震是剪力錯動，波形完全不同。"
+                                explanation="答對了！爆炸只有「向外推」的力，而地震是「兩側錯動」。這種本質的差異會完美呈現在 P 波與 S 波的比例上。"
                             />
                         </Card>
 
                         <footer className="text-center py-16 text-slate-400 border-t mt-12">
-                            <Icon name="Activity" className="animate-ping text-red-300" />
-                            <p className="font-bold text-slate-800 mt-4 uppercase tracking-widest">Seismology Master Class</p>
+                            <Activity className="mx-auto mb-4 animate-pulse text-red-300" size={32} />
+                            <p className="font-bold text-slate-800 text-lg uppercase tracking-widest">Seismology Master Class</p>
+                            <p className="text-sm mt-2 mb-6 italic">「關於這一部分的震動，你有什麼想進一步探討的嗎？ 🌍💥」</p>
+                            <div className="flex justify-center gap-4 text-xs">
+                                <span className="bg-slate-200 px-3 py-1 rounded-full text-slate-600 font-medium">V2.0 動態強化版</span>
+                                <span className="bg-slate-200 px-3 py-1 rounded-full text-slate-600 font-medium">地震學大師製作</span>
+                            </div>
                         </footer>
                     </main>
                 </div>
